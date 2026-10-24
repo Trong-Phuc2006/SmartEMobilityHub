@@ -1,122 +1,65 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
+import { useEffect, useState, useSyncExternalStore } from 'react'
+import Login from './Pages/Login.jsx'
+import Register from './Pages/Register.jsx'
+import ParkingDashboard from './Pages/ParkingDashboard.jsx'
+import SessionGate from './Components/SessionGate.jsx'
+import { createAuthRuntime, normalizeEmail } from './Services/auth.js'
+import { sessionMessage } from './Services/auth-validation.js'
+import { getHash, navigate, resolveRoute, subscribeHash } from './Services/navigation.js'
 import './App.css'
 
 function App() {
-  const [count, setCount] = useState(0)
-
-  return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+  const [runtime] = useState(() => createAuthRuntime({ baseUrl: import.meta.env.VITE_API_BASE_URL }))
+  const [registration, setRegistration] = useState(null)
+  const { session, api } = runtime
+  const state = useSyncExternalStore(session.subscribe, session.getSnapshot)
+  const hash = useSyncExternalStore(subscribeHash, getHash)
+  const route = resolveRoute(hash, state.status)
+  useEffect(() => {
+    void session.restore()
+    const recheck = () => {
+      const current = session.getSnapshot()
+      if (current.status === 'authenticated' && !current.logoutPending) void session.restore()
+    }
+    const visible = () => { if (document.visibilityState === 'visible') recheck() }
+    window.addEventListener('hashchange', recheck)
+    window.addEventListener('focus', recheck)
+    document.addEventListener('visibilitychange', visible)
+    return () => {
+      session.cancel()
+      window.removeEventListener('hashchange', recheck)
+      window.removeEventListener('focus', recheck)
+      document.removeEventListener('visibilitychange', visible)
+    }
+  }, [session])
+  useEffect(() => {
+    if (!['restoring', 'error'].includes(state.status) && hash !== route) navigate(route, true)
+  }, [hash, route, state.status])
+  function loggedOut() {
+    setRegistration(null)
+    navigate('#/login', true)
+  }
+  async function logout() {
+    if (await session.logout()) loggedOut()
+  }
+  if (['restoring', 'error'].includes(state.status)) {
+    return <SessionGate state={state} session={session} onLoggedOut={loggedOut} />
+  }
+  if (state.status === 'authenticated') {
+    return <ParkingDashboard http={runtime.http} user={state.user} route={route} pending={state.logoutPending} onLogout={logout} />
+  }
+  if (route === '#/register') {
+    return <Register onSubmit={api.register} onSuccess={(email) => {
+      setRegistration({ email: normalizeEmail(email) })
+      navigate('#/login', true)
+    }} />
+  }
+  return <Login email={registration?.email} notice={sessionMessage(state.notice) || (registration
+    ? 'Tạo tài khoản thành công. Vui lòng đăng nhập.' : '')}
+    onSubmit={session.login} onSuccess={() => {
+      setRegistration(null)
+      navigate('#/parking', true)
+    }} />
 }
 
 export default App

@@ -1,0 +1,98 @@
+import { useEffect, useState } from 'react'
+import AppShell from '../Components/AppShell.jsx'
+import ParkingSummary from '../Components/ParkingSummary.jsx'
+import ParkingTable from '../Components/ParkingTable.jsx'
+import HubIcon from '../Components/HubIcon.jsx'
+import { createParkingApi, parkingErrorMessage } from '../Services/parking.js'
+import './ParkingDashboard.css'
+
+export default function ParkingDashboard({ http, user, route, pending, onLogout }) {
+  const [api] = useState(() => createParkingApi(http))
+  const [hubs, setHubs] = useState({ status: 'loading', rows: [], error: null })
+  const [selectedHub, setSelectedHub] = useState('')
+  const [parking, setParking] = useState({ status: 'loading', data: null, error: null })
+  const [hubsAttempt, setHubsAttempt] = useState(0)
+  const [parkingAttempt, setParkingAttempt] = useState(0)
+  const [filter, setFilter] = useState('all')
+  const [search, setSearch] = useState('')
+  const [today] = useState(() => new Date().toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' }))
+  const overview = route === '#/overview'
+  useEffect(() => {
+    const controller = new AbortController()
+    // Both signal and closure guard: late results cannot publish after teardown,
+    // even if a transport does not honor cancellation (StrictMode included).
+    let current = true
+    api.hubs({ signal: controller.signal }).then((rows) => {
+      if (!current) return
+      setHubs({ status: 'ready', rows, error: null })
+      setSelectedHub(rows[0]?.hub_id || '')
+    }).catch((error) => {
+      if (current && !controller.signal.aborted) setHubs({ status: 'error', rows: [], error })
+    })
+    return () => { current = false; controller.abort() }
+  }, [api, hubsAttempt])
+  useEffect(() => {
+    if (!selectedHub) return
+    const controller = new AbortController()
+    let current = true
+    api.spaces(selectedHub, { signal: controller.signal }).then((data) => {
+      if (current) setParking({ status: 'ready', data, error: null })
+    }).catch((error) => {
+      if (current && !controller.signal.aborted) setParking({ status: 'error', data: null, error })
+    })
+    return () => { current = false; controller.abort() }
+  }, [api, selectedHub, parkingAttempt])
+  function reset() { setFilter('all'); setSearch('') }
+  function changeHub(id) {
+    setParking({ status: 'loading', data: null, error: null })
+    reset()
+    setSelectedHub(id)
+  }
+  function retryHubs() {
+    setHubs({ status: 'loading', rows: [], error: null })
+    setSelectedHub('')
+    setParking({ status: 'loading', data: null, error: null })
+    reset()
+    setHubsAttempt((value) => value + 1)
+  }
+  function retryParking() {
+    setParking({ status: 'loading', data: null, error: null })
+    setParkingAttempt((value) => value + 1)
+  }
+  const data = hubs.status === 'ready' && parking.status === 'ready' && parking.data.hub.hub_id === selectedHub ? parking.data : null
+  const hub = hubs.rows.find((row) => row.hub_id === selectedHub)
+  const mine = data?.spaces.filter((space) => space.is_mine) || []
+  const error = hubs.error || parking.error
+  const loading = hubs.status === 'loading' || (hubs.status === 'ready' && hubs.rows.length > 0 && parking.status === 'loading')
+  return <AppShell user={user} route={route} pending={pending} onLogout={onLogout} hubs={hubs.rows}
+    selectedHub={selectedHub} hubsLoading={hubs.status === 'loading'} onHubChange={changeHub}>
+    <main className="em-main" aria-busy={Boolean(loading)}>
+      <div className="em-overview-heading"><div><h1>{overview ? 'Tổng quan Mobility Hub' : 'Bãi đỗ xe'}</h1>
+        <p>{hub ? [hub.name, hub.location_type].filter(Boolean).join(' · ') : 'Thông tin dịch vụ tại Mobility Hub'}</p></div>
+        <div className="em-date">{today}<span><i />Dữ liệu demo · SQLite</span></div>
+      </div>
+      <ParkingSummary summary={data?.summary} overview={overview} pending={pending} />
+      <section className="em-resource-section" aria-labelledby="em-resource-title">
+        <div className="em-section-heading"><div><div className="em-eyebrow">DỊCH VỤ TẠI {hub?.name || 'MOBILITY HUB'}</div>
+          <div className="em-table-title"><h2 id="em-resource-title">{overview ? 'Danh sách tài nguyên' : 'Bãi đỗ xe'}<span>{data ? data.summary.total_spaces : '—'}</span></h2>
+            {overview && <label className="em-module-select"><select aria-label="Chọn phân hệ trong bảng" value="parking" onChange={() => {}}>
+              <option value="parking">Bãi đỗ xe</option><option disabled>Phương tiện · Chưa triển khai</option><option disabled>Trạm sạc · Chưa triển khai</option>
+            </select><HubIcon name="down" size={14} /></label>}
+          </div><p>Xem tình trạng và chỗ đỗ của bạn trong Hub hiện tại.</p></div></div>
+        {mine.length > 0 && <div className="em-reservation"><span className="em-reservation-icon"><HubIcon name="check" size={19} /></span>
+          <div><strong>Chỗ đỗ của bạn · {mine.length} chỗ</strong><span>Trong Hub hiện tại · {hub.name}</span></div>
+          <button className="em-text-button" type="button" onClick={() => { setFilter('mine'); setSearch('') }}>Xem đặt chỗ <HubIcon name="arrow" size={16} /></button>
+        </div>}
+        {data && data.hub.total_parking_capacity !== data.summary.total_spaces && <p className="em-capacity-notice" role="status">
+          Sức chứa cấu hình: {data.hub.total_parking_capacity}; số chỗ đã lưu: {data.summary.total_spaces}.</p>}
+        {loading && <div className="em-state em-table-card" role="status">{hubs.status === 'loading' ? 'Đang tải Mobility Hub…' : 'Đang tải chỗ đỗ xe…'}</div>}
+        {error && <div className="em-state em-table-card"><p role="alert">{parkingErrorMessage(error)}</p>
+          <button className="button button-primary" type="button" onClick={hubs.error || error.code === 'HUB_NOT_FOUND' ? retryHubs : retryParking}>Thử lại</button></div>}
+        {hubs.status === 'ready' && !hubs.rows.length && <div className="em-state em-table-card"><HubIcon name="location" size={30} />
+          <strong>Chưa có Mobility Hub</strong><p>Chưa có dữ liệu Hub trong SQLite.</p><button className="em-text-button" type="button" onClick={retryHubs}>Tải lại</button></div>}
+        {data && <ParkingTable spaces={data.spaces} filter={filter} search={search} onFilter={setFilter} onSearch={setSearch} onReset={reset} />}
+        <div className="em-footnote"><HubIcon name="info" size={15} /><span>Chỉ xem dữ liệu. Chức năng đặt, đến bãi và trả chỗ chưa triển khai.</span></div>
+      </section>
+    </main>
+  </AppShell>
+}

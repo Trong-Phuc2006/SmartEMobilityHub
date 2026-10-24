@@ -4,6 +4,11 @@ node_modules/
 # Environment variables and secrets
 .env
 .env.*
+!.env.example
+*.key
+*.pem
+*.p12
+*.pfx
 
 # SQLite database files
 *.db
@@ -11,6 +16,19 @@ node_modules/
 *.sqlite3
 *.db-journal
 *.sqlite-journal
+*.sqlite3-journal
+*.db-wal
+*.db-shm
+*.sqlite-wal
+*.sqlite-shm
+*.sqlite3-wal
+*.sqlite3-shm
+
+# Generated build/test/local artifacts (keep source and SQL trackable)
+dist/
+coverage/
+.tmp/
+*.tmp
 
 # Logs
 *.log
