@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 600" fill="none">
+  <title>Smart E-Mobility Hub campus</title>
+  <defs>
+    <linearGradient id="land" x1="500" y1="150" x2="500" y2="590" gradientUnits="userSpaceOnUse"><stop stop-color="#fff"/><stop offset="1" stop-color="#dce9ff"/></linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#b5d9ff"/><stop offset="1" stop-color="#668ee9"/></linearGradient>
+    <linearGradient id="blue" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#568bff"/><stop offset="1" stop-color="#1c50c6"/></linearGradient>
+    <filter id="shadow" x="-30%" y="-40%" width="160%" height="190%"><feDropShadow dx="0" dy="14" stdDeviation="14" flood-color="#3561a7" flood-opacity=".15"/></filter>
+    <g id="tree"><ellipse cx="0" cy="32" rx="30" ry="10" fill="#b7d5d0" opacity=".45"/><path d="M0 2v30" stroke="#578a87" stroke-width="7"/><path d="M-27 0C-41-17-21-42-4-49 13-57 43-31 31-9 39 12 7 27-12 16-28 21-39 8-27 0Z" fill="#81bdb1"/><path d="M0 10v-28m0 27 13-14" stroke="#b7e0cd" stroke-width="3" stroke-linecap="round"/></g>
+    <g id="charger"><ellipse cx="3" cy="46" rx="26" ry="9" fill="#9fbbdf" opacity=".35"/><rect x="-18" y="-30" width="36" height="72" rx="8" fill="#fff"/><path d="M8-29h10v68H8" fill="#d9e5fa"/><rect x="-11" y="-19" width="20" height="24" rx="4" fill="#2563eb"/><path d="m1-15-7 10h6l-3 7L5-9H0l1-6Z" fill="#fff"/><circle cx="-2" cy="17" r="4" fill="#65bfa3"/><path d="M18-13c28 0 16 39 30 39 16 0 11-23 9-34" stroke="#466286" stroke-width="5" stroke-linecap="round"/><path d="m54-10 8-3 4 12-8 3Z" fill="#34517d"/></g>
+    <g id="bike"><circle cx="0" cy="0" r="22" fill="#edf4ff" stroke="#435c80" stroke-width="5"/><circle cx="83" cy="0" r="22" fill="#edf4ff" stroke="#435c80" stroke-width="5"/><path d="m0 0 28-39 23 39H0m28-39h38L51 0m32 0L67-49m-8 0h17M20-47h18" stroke="#2e72de" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></g>
+  </defs>
+  <ellipse cx="505" cy="509" rx="423" ry="67" fill="#a9c3ef" opacity=".17"/>
+  <path d="m54 341 449-210 441 224-432 222Z" fill="url(#land)" filter="url(#shadow)"/>
+  <path d="M110 370 483 188l368 186-369 188Z" stroke="#c6d8f3" stroke-width="46" stroke-linejoin="round"/>
+  <path d="m115 371 369-182 365 185-366 185Z" stroke="#fff" stroke-width="2" stroke-dasharray="12 12"/>
+  <path d="m301 280 208-103 211 108-209 106Z" fill="#b7ccec" opacity=".35"/>
+  <!-- Original campus buildings, with stepped roofs and glazed facades. -->
+  <g filter="url(#shadow)">
+    <path d="m354 132 157-76 145 73-158 81Z" fill="#fff"/>
+    <path d="m354 132 144 78v118l-144-74Z" fill="#dce8fb"/>
+    <path d="m498 210 158-81v120l-158 79Z" fill="#c4d6f4"/>
+    <path d="m373 163 105 55v70l-105-54Z" fill="url(#glass)"/>
+    <path d="m518 217 116-60v72l-116 59Z" fill="url(#glass)"/>
+    <path d="M398 177v68m28-53v67m28-52v66m91-69v71m30-86v72m31-88v73" stroke="#edf4ff" stroke-width="6"/>
+    <path d="m347 130 150 79 166-83v16l-166 83-150-78Z" fill="#93b3ea"/>
+    <path d="m411 108 93-44 89 44-92 45Z" fill="#eef4ff"/>
+    <path d="m428 107 76-36 69 36-75 36Z" fill="#376dce"/>
+    <path d="m444 99 68 35m-43-47 68 35m-85-10 73-34m-53 46 72-34" stroke="#8eb5ef" stroke-width="2"/>
+    <path d="m474 258 22 12v58l-22-11Z" fill="#5b7fab"/>
+  </g>
+  <g opacity=".8"><path d="m677 213 72-34 70 35-72 36Z" fill="#fff"/><path d="m677 213 70 37v67l-70-35Z" fill="#dce8fb"/><path d="m747 250 72-36v67l-72 36Z" fill="#bdd2f0"/><path d="m691 238 42 22v26l-42-21Zm69 25 42-22v26l-42 21Z" fill="#92b4e4"/></g>
+  <!-- Parking bays and a solar charging canopy. -->
+  <path d="m288 358 195-95 211 109-195 97Z" fill="#e5edf9" stroke="#c8d9ef" stroke-width="2"/>
+  <path d="m321 374 156-76m-103 102 155-76m-103 103 155-77m-102 104 154-77" stroke="#fff" stroke-width="4"/>
+  <path d="M275 288v91m142-22v81m177-166v104" stroke="#9bb5df" stroke-width="7"/>
+  <path d="m252 285 190-91 183 91-190 95Z" fill="#fff"/>
+  <path d="m267 282 176-84 165 83-175 86Z" fill="url(#blue)"/>
+  <path d="m304 265 165 84m-125-104 164 84m-124-103 163 84m-124-103 163 83M305 302l175-85m-135 105 174-85m-136 104 176-86" stroke="#a3c5ff" stroke-width="2"/>
+  <path d="m252 285 183 95 190-95v10l-190 95-183-95Z" fill="#7da1df"/>
+  <use href="#charger" x="366" y="395"/><use href="#charger" x="534" y="393"/>
+  <!-- Electric car in perspective. -->
+  <g transform="translate(443 423)" filter="url(#shadow)">
+    <ellipse cx="10" cy="35" rx="100" ry="26" fill="#aec6e6" opacity=".5"/>
+    <path d="m-83-6 28-42 63-12 59 30 26 37v26l-62 26-106-40Z" fill="#fff"/>
+    <path d="m-55-48 63-12 59 30-61 22-72-24Z" fill="#bcd7f5"/>
+    <path d="m-47-43 53-9 45 23L-3-12l-56-20Z" fill="#527cae"/>
+    <path d="m4-49 2 34m-66-15 23 40" stroke="#e6f0fc" stroke-width="5"/>
+    <path d="m-83-6 102 40 74-27v26L31 59-75 19Z" fill="#d6e5f9"/>
+    <path d="M19 34v20" stroke="#96b8e3" stroke-width="2"/>
+    <path d="m34 35 44-17" stroke="#94bbea" stroke-width="6" stroke-linecap="round"/>
+    <path d="m37 45 23-8" stroke="#2563eb" stroke-width="4" stroke-linecap="round"/>
+    <ellipse cx="-47" cy="18" rx="12" ry="18" transform="rotate(-18 -47 18)" fill="#334c70"/><ellipse cx="-47" cy="18" rx="6" ry="10" transform="rotate(-18 -47 18)" fill="#9bb6d9"/>
+    <ellipse cx="63" cy="39" rx="11" ry="17" transform="rotate(19 63 39)" fill="#334c70"/><ellipse cx="63" cy="39" rx="5" ry="10" transform="rotate(19 63 39)" fill="#9bb6d9"/>
+  </g>
+  <use href="#tree" x="239" y="313"/><use href="#tree" x="720" y="369"/><use href="#tree" x="817" y="339"/><use href="#tree" x="203" y="396"/><use href="#tree" x="585" y="491"/>
+  <g transform="translate(643 446) scale(.8)"><use href="#bike"/><use href="#bike" x="42" y="-35" opacity=".6"/></g>
+  <g transform="translate(217 210)"><rect width="48" height="58" rx="9" fill="#2563eb"/><path d="M17 43V15h10a8 8 0 0 1 0 16H17" stroke="#fff" stroke-width="5"/><path d="M24 58v42" stroke="#8aaddd" stroke-width="6"/></g>
+  <!-- Connected mobility signal. -->
+  <path d="M600 73q28-20 56 0m-47 12q19-14 38 0m-28 12q9-7 18 0" stroke="#6899ec" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="628" cy="108" r="4" fill="#2563eb"/>
+  <g stroke="#b7cff5" stroke-width="2" stroke-dasharray="4 7"><path d="M241 205v-28l108-52M659 90l85 42v38M751 407l77 38-83 42"/></g>
+  <g fill="#2563eb"><circle cx="349" cy="125" r="5"/><circle cx="745" cy="170" r="5"/><circle cx="745" cy="487" r="5"/></g>
+</svg>

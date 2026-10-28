@@ -8,7 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "test": "node --test test/auth.test.mjs test/parking.test.mjs",
-    "test:browser": "node --test --test-concurrency=1 test/browser.test.mjs test/parking.browser.test.mjs test/persistence.browser.test.mjs",
+    "test:browser": "node --test --test-concurrency=1 test/browser.test.mjs test/parking.browser.test.mjs test/persistence.browser.test.mjs test/cr01.browser.test.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

@@ -32,6 +32,7 @@ export function createHttpClient({ baseUrl, fetchImpl = globalThis.fetch, onAuth
         throw new ApiError('NETWORK_ERROR', { kind: 'network' })
       }
       let envelope
+      if (signal?.aborted) throw new DOMException('Aborted', 'AbortError')
       try {
         if (!response.headers.get('content-type')?.includes('application/json')) throw new Error()
         envelope = await response.json()
@@ -39,6 +40,7 @@ export function createHttpClient({ baseUrl, fetchImpl = globalThis.fetch, onAuth
         if (signal?.aborted || error.name === 'AbortError') throw error
         throw new ApiError('UNEXPECTED_RESPONSE', { status: response.status, kind: 'protocol' })
       }
+      if (signal?.aborted) throw new DOMException('Aborted', 'AbortError')
       if (response.ok && envelope?.ok === true && envelope.data && typeof envelope.data === 'object') {
         return { data: envelope.data, status: response.status }
       }

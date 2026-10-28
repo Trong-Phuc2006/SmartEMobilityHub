@@ -34,8 +34,9 @@ test('P7 file-backed browser demo, real offline/origin failures and backend rest
     }
     vite = await startVite()
     const cdp = await startBrowser(t)
-    fs.mkdirSync(path.join(root, '.tmp'), { recursive: true })
-    const artifacts = fs.mkdtempSync(path.join(root, '.tmp/p7-browser-'))
+    const outputRoot = process.env.SEMH_EVIDENCE_ROOT || path.join(root, '.tmp')
+    fs.mkdirSync(outputRoot, { recursive: true })
+    const artifacts = fs.mkdtempSync(path.join(outputRoot, 'p7-browser-'))
     const evidence = { database: 'owned file-backed SQLite', restart: {}, screenshots: [], viewports: [], authViewports: [], runtimeExceptions: 0 }
     cdp.on('Runtime.exceptionThrown', () => { evidence.runtimeExceptions++ })
     const requests = []
@@ -190,8 +191,8 @@ test('P7 file-backed browser demo, real offline/origin failures and backend rest
             heading:getComputedStyle(document.querySelector('h1')).fontSize,
             protectedContent:!!document.querySelector('[data-protected-view]')})`)
           assert.equal(metric.overflow, false)
-          assert.equal(metric.card, Math.min(464, width - 32))
-          assert.equal(metric.padding, '26px'); assert.equal(metric.input, 40); assert.equal(metric.heading, '24px')
+          assert.ok(metric.card >= 250 && metric.card <= 400, 'comfortable responsive form width')
+          assert.equal(metric.padding, '0px'); assert.equal(metric.input, 48); assert.equal(metric.heading, width <= 480 ? '26px' : '28px')
           assert.equal(metric.protectedContent, false)
           evidence.authViewports.push({ mode, ...metric }); await screenshot(mode + '-' + width)
         }

@@ -30,8 +30,9 @@ test('P5 actual SQLite Parking browser flows and HTML comparison',
     await vite.listen()
     t.after(() => vite.close())
     const cdp = await startBrowser(t)
-    fs.mkdirSync(path.join(root, '.tmp'), { recursive: true })
-    const artifacts = fs.mkdtempSync(path.join(root, '.tmp/p5-browser-'))
+    const outputRoot = process.env.SEMH_EVIDENCE_ROOT || path.join(root, '.tmp')
+    fs.mkdirSync(outputRoot, { recursive: true })
+    const artifacts = fs.mkdtempSync(path.join(outputRoot, 'p5-browser-'))
     const evidence = { tests: [], referenceHash: null, reference: [], react: [], screenshots: [], consoleErrors: [] }
     const requests = [], faults = new Map(), held = []
     cdp.on('Runtime.exceptionThrown', () => evidence.consoleErrors.push('browser runtime exception'))
@@ -120,7 +121,7 @@ test('P5 actual SQLite Parking browser flows and HTML comparison',
       await screen('empty-hubs')
     })
     const userId = running.db.prepare('SELECT user_id FROM Users WHERE email=?').get('p5-student@example.com').user_id
-    seedParking(running.db, userId)
+    seedParking(running.db, userId, { consistent: true })
     const getChanges = () => running.db.prepare('SELECT total_changes() n').get().n
     const changes = getChanges()
     await t.test('Hub loading, default sorting, SQLite table, status/ownership/privacy and capacity notice', async () => {
@@ -139,7 +140,7 @@ test('P5 actual SQLite Parking browser flows and HTML comparison',
       assert.equal(states.filter((s) => s === 'Còn trống').length, 1)
       assert.equal(states.filter((s) => s === 'Đã đặt').length, 3)
       assert.equal(states.filter((s) => s === 'Đang sử dụng').length, 3)
-      assert.equal(await evaluate(cdp, "document.querySelectorAll('.em-actions button').length"), 0)
+      assert.equal(await evaluate(cdp, "document.querySelectorAll('.em-actions button').length"), 4)
       assert.equal(await evaluate(cdp, "document.querySelectorAll('.em-nav-item:disabled').length"), 2)
       assert.equal(getChanges(), changes)
     })
@@ -219,7 +220,8 @@ test('P5 actual SQLite Parking browser flows and HTML comparison',
       await click(cdp, '.em-nav-item:first-child')
       await waitFor(cdp, textIncludes('Tổng quan Mobility Hub'), 'Overview')
       await waitRows(); await screen('react-overview-1440')
-      assert.equal(await evaluate(cdp, "document.querySelectorAll('[aria-label=" + JSON.stringify('Chọn phân hệ trong bảng') + "] option:disabled').length"), 2)
+      assert.equal(await evaluate(cdp, "document.querySelector('[aria-label=" + JSON.stringify('Chọn phân hệ trong bảng') + "]').disabled"), true)
+      assert.equal(await evaluate(cdp, "document.querySelectorAll('[aria-label=" + JSON.stringify('Chọn phân hệ trong bảng') + "] option[disabled]').length"), 2)
       await click(cdp, '.em-nav-item:nth-child(2)'); await waitRows()
     })
     await t.test('refresh restores session, protected GET expiry invalidates, Logout clears Parking and Back is guarded', async () => {

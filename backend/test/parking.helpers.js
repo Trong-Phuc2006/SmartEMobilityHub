@@ -1,5 +1,5 @@
 // Fixtures only: callers must supply an isolated test DB with the real schema.
-function seedParking(db, userId) {
+function seedParking(db, userId, { consistent = false } = {}) {
   const otherId = "other-parking-user";
   db.prepare("INSERT INTO Users(user_id,role,email,password_hash) VALUES (?,?,?,?)")
     .run(otherId, "STUDENT", "private-other@example.com", "not-a-login-fixture");
@@ -29,9 +29,11 @@ function seedParking(db, userId) {
   reservation("D-reserved-other", "RESERVED", otherId);
   reservation("E-occupied-other", "ACTIVE", otherId);
   // History/wrong states must not multiply counts or create ownership.
-  for (const state of ["COMPLETED", "CANCELLED", "EXPIRED", "ACTIVE"]) reservation("B-reserved-mine", state, otherId);
-  reservation("F-reserved-unknown", "ACTIVE");
-  reservation("A-available", "RESERVED");
+  for (const state of ["COMPLETED", "CANCELLED", "EXPIRED", ...(consistent ? [] : ["ACTIVE"])]) reservation("B-reserved-mine", state, otherId);
+  if (!consistent) {
+    reservation("F-reserved-unknown", "ACTIVE");
+    reservation("A-available", "RESERVED");
+  }
   return { otherId, reservation, spaces };
 }
 

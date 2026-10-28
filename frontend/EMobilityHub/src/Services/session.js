@@ -16,8 +16,12 @@ export function createAuthSession(api) {
     active = undefined
   }
   function invalidate(error) {
+    // Parallel protected requests can see expiry, then the cookie already cleared.
+    // Preserve the useful expiry/account reason instead of overwriting it with a
+    // later generic AUTH_REQUIRED from the same invalidated session.
+    const notice = error.code === 'AUTH_REQUIRED' && state.status === 'unauthenticated' && state.notice ? state.notice : error.code
     cancel()
-    publish({ status: 'unauthenticated', user: null, error: null, notice: error.code, logoutPending: false })
+    publish({ status: 'unauthenticated', user: null, error: null, notice, logoutPending: false })
   }
   async function restore() {
     if (mutation) return

@@ -1,0 +1,9 @@
+{
+  "name": "smart-e-mobility-hub-demo",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev:demo": "node scripts/dev-demo.js",
+    "demo:status": "node scripts/dev-demo.js --status"
+  }
+}

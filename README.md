@@ -1,6 +1,76 @@
 # SmartEMobilityHub — môi trường local, Auth và Parking
 
-Giữ React/Vite JavaScript/JSX, Express CommonJS và better-sqlite3/SQLite. P1 hạ tầng, P2/P3 Auth backend và P4 Auth frontend đã được kiểm tra. P5 có dashboard Overview/Parking với GET SQLite thật. P7 bổ sung isolated persistent demo opt-in; không Parking writes. Hướng dẫn ưu tiên cho demo mới ở mục [P7](#p7--demo-file-backed-an-toàn-và-restart).
+Giữ React/Vite JSX → Express CommonJS → SQLite. CR-01 bổ sung Auth split screen, Parking đặt/đến/trả/hủy thật và một lệnh demo dùng dữ liệu bền vững. HTTP duy nhất ở [contract của harness](<../Codex Workspace/contracts/http-api.md>); P6 assignment riêng vẫn conditional/unresolved.
+
+## CR-01 — cách chạy hiện hành
+
+Mở PowerShell tại thư mục chứa README này (`SmartEMobilityHub`). Chỉ cài dependencies một lần khi checkout chưa cài hoặc lockfile thay đổi; Node24/npm11 là môi trường đã kiểm:
+
+```powershell
+npm --prefix backend ci --no-audit --no-fund
+npm --prefix frontend/EMobilityHub ci --no-audit --no-fund
+```
+
+Mỗi lần sử dụng, chỉ chạy:
+
+```powershell
+npm run dev:demo
+```
+
+Mở **http://localhost:5173**. Backend dùng http://localhost:3000. Launcher kiểm cổng, chạy Backend trước, chờ readiness rồi chạy Frontend; log cả hai trong cùng console. **Ctrl+C** dừng hai child processes thuộc launcher. Không kill các Node/Chrome khác. Cổng bận hoặc service lỗi: báo lỗi và đóng companion, không đổi cổng ngầm. Không chạy npm ci khi startup.
+
+Lần đầu tạo instance `cr01-demo`, nạp schema/fixture trong transaction và tạo signing key ngẫu nhiên một lần. Lần sau giữ nguyên DB/key/users/reservations, không chạy seed hay schema initializer. Init lỗi giữ marker incomplete và từ chối dùng lại, không báo ready hoặc tự xóa dữ liệu; chọn instance mới để tiếp tục. Không mở/sửa `acceptance-p7`, `class-demo`, DB demo cũ hoặc DB nhóm.
+
+| Dữ liệu | Đường dẫn từ root |
+| --- | --- |
+| Synthetic template, version controlled | backend/demo/demo-data.json |
+| SQLite thực tế, persistent, ignored | backend/.tmp/local-demos/cr01-demo/smart_mobility.demo.db |
+| Signing key riêng, ignored, không chia sẻ | backend/.tmp/local-demos/cr01-demo/.env |
+| Ownership/readiness marker | backend/.tmp/local-demos/cr01-demo/owner.json |
+
+**Tài khoản DEMO-ONLY công khai:** `student@demo.example`, `rider@demo.example`, `guest@demo.example`; mật khẩu chung `CampusDemo!2026`. Chỉ dành cho dữ liệu tổng hợp trên localhost, không dùng lại cho tài khoản thật/deploy. DB lưu scrypt có salt riêng, không plaintext hoặc Auth bypass. Student ban đầu giữ CAMPUS-02 (RESERVED); Rider dùng CAMPUS-03; Guest giữ METRO-02. Ba Hub/12 spaces có AVAILABLE/RESERVED/OCCUPIED và một Hub trống. Mỗi account chỉ một active Parking reservation.
+
+Đăng ký account của bạn qua UI bình thường; account/hash và thao tác Parking nằm trong SQLite. Không xóa/thay DB/.env nếu muốn giữ account và session. Logout/expiry không xóa account; cookie hết hạn sau1giờ thì đăng nhập lại. Restart cùng key cho phép cookie còn hạn phục hồi session.
+
+Kiểm dữ liệu/path an toàn, không in key/token:
+
+```powershell
+npm run demo:status
+```
+
+Thử persistence: đăng ký/login → hủy chỗ demo hiện tại nếu cần → đặt một chỗ trống → refresh → xác nhận đến bãi → Ctrl+C → chạy lại `npm run dev:demo` → refresh thấy OCCUPIED → trả chỗ → restart thấy AVAILABLE. Không chạy `demo:seed` để reset trạng thái.
+
+Muốn dataset mới hoàn toàn, chọn **tên instance khác** một cách tường minh (không xóa instance cũ):
+
+```powershell
+$env:DEMO_NAME = 'fresh-demo-01'
+npm run dev:demo
+# Sau Ctrl+C, bỏ lựa chọn để về cr01-demo:
+Remove-Item Env:DEMO_NAME
+```
+
+Tên phải là lowercase slug1..32, không đường dẫn. Tên đã tồn tại luôn được tái dùng, kể cả instance P7 rỗng; không tự thêm fixture. Dùng cùng `DEMO_NAME` với `npm run demo:status` để xem đúng instance. Không có lệnh reset tự động.
+
+Đổi cổng khi cần: `$env:PORT='3001'; $env:VITE_DEV_PORT='5174'; npm run dev:demo`. Launcher đồng bộ API/CORS theo hai cổng, chỉ localhost HTTP và từ chối `FRONTEND_ORIGIN`/`VITE_API_BASE_URL` mâu thuẫn hoặc `COOKIE_SECURE=true` trên HTTP. Normal demo không đọc backend/.env thật hoặc dùng caller DATABASE_PATH/JWT_SECRET để đổi target/key.
+
+Parking enforce ownership/transitions và giới hạn một active/user ở Backend trên mọi Hub. Request lỗi mạng có thể đã commit: dialog yêu cầu **Tải lại trạng thái**, không tự gửi lại POST. Dữ liệu legacy nhiều active/user không bị tự sửa; owner có thể trả từng chỗ. Dữ liệu reservation↔space mâu thuẫn trả safe integrity error để kiểm tra riêng. Vehicle/Charging vẫn ghi chưa triển khai, không có số liệu/business API giả.
+
+Kiểm thử tái sử dụng (isolated memory/temp DB, không sửa stable demo):
+
+```powershell
+npm --prefix backend test
+npm --prefix backend run test:db
+npm --prefix frontend/EMobilityHub test
+npm --prefix frontend/EMobilityHub run lint
+npm --prefix frontend/EMobilityHub run build
+npm --prefix frontend/EMobilityHub run test:browser
+```
+
+Chrome tests dùng3000/5173; dừng demo trước khi chạy. Chỉ trong môi trường managed gặp sandbox/Page.enable timeout, đặt `$env:P4_BROWSER_NO_SANDBOX='1'` cho disposable local test profile rồi bỏ biến sau test. `SEMH_EVIDENCE_ROOT` có thể chọn nơi lưu screenshots/evidence. Node test runner dùng namespace local-demo dưới OS temp, tách instance thủ công; tests đóng process/DB rồi xóa đúng owned fixtures. Các lệnh cài ở trên là prerequisite; CR-01 dùng dependencies đã cài theo lockfile, không tuyên bố vừa kiểm clean-machine install.
+
+## Hướng dẫn lịch sử P1–P7
+
+Phần dưới giữ cách chạy từng module/CLI P7 và mốc coverage trước CR-01. Các giới hạn read-only, Auth card và bước manual init/register/seed là **lịch sử**, được cách chạy CR-01 ở trên thay thế cho demo thông thường; các CLI opt-in vẫn tồn tại để tương thích.
 
 ## Công cụ và cài dependency
 

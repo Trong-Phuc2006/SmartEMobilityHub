@@ -1,5 +1,6 @@
 const fs = require("node:fs");
 const path = require("node:path");
+const os = require("node:os");
 const { randomBytes } = require("node:crypto");
 const Database = require("better-sqlite3");
 const dotenv = require("dotenv");
@@ -8,7 +9,11 @@ const { startServer } = require("../server");
 const { normalizeEmail } = require("../services/auth.service");
 const { hashPassword } = require("../services/password.service");
 
-const LOCAL_DEMO_ROOT = path.join(BACKEND_ROOT, ".tmp/local-demos");
+// Node's test runner owns a separate temporary namespace. Production CLI cannot
+// select an arbitrary database path; its stable P7 location remains unchanged.
+const TEST_DEMOS = Boolean(process.env.NODE_TEST_CONTEXT);
+const LOCAL_DEMO_ROOT = TEST_DEMOS ? path.join(fs.realpathSync(os.tmpdir()), "smartemobilityhub-test-demos")
+  : path.join(BACKEND_ROOT, ".tmp/local-demos");
 const KIND = "SmartEMobilityHub isolated local demo v1";
 
 class LocalDemoError extends Error {}
@@ -31,8 +36,10 @@ function directoryCheck(directory) {
 
 function rootCheck(create = false) {
   directoryCheck(BACKEND_ROOT);
-  for (const directory of [path.join(BACKEND_ROOT, ".tmp"), LOCAL_DEMO_ROOT]) {
-    if (create && !fs.existsSync(directory)) fs.mkdirSync(directory);
+  for (const directory of [TEST_DEMOS ? fs.realpathSync(os.tmpdir()) : path.join(BACKEND_ROOT, ".tmp"), LOCAL_DEMO_ROOT]) {
+    if (create && !fs.existsSync(directory)) {
+      try { fs.mkdirSync(directory); } catch (error) { if (error.code !== "EEXIST") throw error; }
+    }
     directoryCheck(directory);
   }
 }
@@ -56,6 +63,7 @@ function inspectPaths(name) {
   if (marker.kind !== KIND || marker.name !== name || marker.database !== "smart_mobility.demo.db") {
     refuse("Local-demo ownership marker does not match the selected instance.");
   }
+  if (marker.ready === false) refuse("Local-demo initialization is incomplete. Existing files were preserved; select a fresh instance name.");
   fileCheck(paths.env); fileCheck(paths.database);
   for (const suffix of ["-journal", "-wal", "-shm"]) fileCheck(paths.database + suffix, true);
   return paths;
@@ -68,21 +76,60 @@ function openLocalDemo(name, { readonly = false } = {}) {
   catch (error) { db.close(); throw error; }
 }
 
-function initializeLocalDemo(name) {
+function initializeLocalDemo(name, { populate } = {}) {
   const paths = demoPaths(name);
   rootCheck(true);
-  // Never reuse/replace an existing directory, DB or signing key. A partial init
-  // remains visible and must be inspected; there is no automatic reset/cleanup.
+  // Exclusive ownership; publish ready only after schema + optional fixture commit.
   fs.mkdirSync(paths.directory);
   directoryCheck(paths.directory);
-  fs.writeFileSync(paths.marker, JSON.stringify({ kind: KIND, name, database: "smart_mobility.demo.db" }), { flag: "wx", mode: 0o600 });
+  const marker = { kind: KIND, name, database: "smart_mobility.demo.db", ready: false };
+  fs.writeFileSync(paths.marker, JSON.stringify(marker), { flag: "wx", mode: 0o600 });
   fs.writeFileSync(paths.env, "JWT_SECRET=" + randomBytes(32).toString("hex") + "\n", { flag: "wx", mode: 0o600 });
   const fd = fs.openSync(paths.database, "wx", 0o600);
   fs.closeSync(fd);
-  const db = openLocalDemo(name);
-  try { db.transaction(() => db.exec(fs.readFileSync(SCHEMA_PATH, "utf8")))(); }
+  const db = new Database(paths.database, { fileMustExist: true });
+  try {
+    db.pragma("foreign_keys=ON");
+    db.transaction(() => {
+      db.exec(fs.readFileSync(SCHEMA_PATH, "utf8"));
+      if (populate) populate(db);
+      if (db.pragma("foreign_key_check").length) refuse("Demo fixture foreign keys are inconsistent.");
+    }).immediate();
+  }
   finally { db.close(); }
+  const pendingMarker = path.join(paths.directory, "owner.ready.json");
+  fs.writeFileSync(pendingMarker, JSON.stringify({ ...marker, ready: true }), { flag: "wx", mode: 0o600 });
+  fs.renameSync(pendingMarker, paths.marker);
   return paths;
+}
+
+async function ensureLocalDemo(name) {
+  const paths = demoPaths(name);
+  // lstat, rather than existsSync, also catches dangling links. Never seed an
+  // existing instance, even if it is empty or used an older fixture version.
+  try {
+    fs.lstatSync(paths.directory);
+    inspectPaths(name);
+    return { ...paths, initialized: false };
+  } catch (error) {
+    if (error.code !== "ENOENT" || fs.existsSync(paths.directory)) throw error;
+  }
+  const fixture = require("../../demo/demo-data.json");
+  const hashes = await Promise.all(fixture.users.map(() => hashPassword(fixture.password)));
+  initializeLocalDemo(name, { populate: (db) => {
+    const user = db.prepare("INSERT INTO Users(user_id,email,role,status,password_hash) VALUES (?,?,'STUDENT','ACTIVE',?)");
+    fixture.users.forEach((row, i) => user.run(row.user_id, row.email, hashes[i]));
+    const hub = db.prepare("INSERT INTO Hubs(hub_id,name,location_type,total_parking_capacity) VALUES (?,?,?,?)");
+    fixture.hubs.forEach(row => hub.run(row.hub_id, row.name, row.location_type, row.total_parking_capacity));
+    const space = db.prepare("INSERT INTO ParkingSpaces(space_id,hub_id,state) VALUES (?,?,?)");
+    const reservation = db.prepare("INSERT INTO Reservations(reservation_id,user_id,type,space_id,start_time,state,created_at) VALUES (?,?,'PARKING',?,?,?,?)");
+    const now = new Date().toISOString();
+    for (const row of fixture.spaces) {
+      space.run(row.space_id, row.hub_id, row.state);
+      if (row.owner) reservation.run("initial-" + row.space_id, row.owner, row.space_id, now, row.state === "RESERVED" ? "RESERVED" : "ACTIVE", now);
+    }
+  } });
+  return { ...paths, initialized: true };
 }
 
 async function startLocalDemo(name, { env = process.env } = {}) {
@@ -166,5 +213,5 @@ async function seedLocalDemo(name, email) {
   } finally { db.close(); }
 }
 
-module.exports = { LocalDemoError, LOCAL_DEMO_ROOT, demoPaths, inspectPaths, initializeLocalDemo,
+module.exports = { LocalDemoError, LOCAL_DEMO_ROOT, demoPaths, inspectPaths, initializeLocalDemo, ensureLocalDemo,
   openLocalDemo, startLocalDemo, localDemoStatus, seedLocalDemo };

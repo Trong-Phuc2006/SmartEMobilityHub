@@ -22,13 +22,21 @@ function App() {
       if (current.status === 'authenticated' && !current.logoutPending) void session.restore()
     }
     const visible = () => { if (document.visibilityState === 'visible') recheck() }
+    // Chromium can emit window focus when a native dialog closes without ever
+    // blurring the window. Rechecking then remounts Parking and loses dialog focus.
+    // A real return from another window still revalidates the current account.
+    let wasBlurred = false
+    const blurred = () => { wasBlurred = true }
+    const focused = () => { if (wasBlurred) { wasBlurred = false; recheck() } }
     window.addEventListener('hashchange', recheck)
-    window.addEventListener('focus', recheck)
+    window.addEventListener('blur', blurred)
+    window.addEventListener('focus', focused)
     document.addEventListener('visibilitychange', visible)
     return () => {
       session.cancel()
       window.removeEventListener('hashchange', recheck)
-      window.removeEventListener('focus', recheck)
+      window.removeEventListener('blur', blurred)
+      window.removeEventListener('focus', focused)
       document.removeEventListener('visibilitychange', visible)
     }
   }, [session])

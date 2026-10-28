@@ -279,3 +279,28 @@
   .em-reservation { flex-wrap:wrap; }
 }
 
+
+/* CR-01 dialogs and feedback geometry from the original HTML. */
+.em-notice-region{position:fixed;right:28px;bottom:26px;z-index:10;max-width:450px}.em-toast{background:#fff;border:1px solid #d4e1f8;box-shadow:0 12px 45px #1c345126,0 2px 7px #1c345110;padding:15px;border-radius:10px;display:flex;align-items:flex-start;gap:10px;animation:em-enter .2s ease-out}.em-toast-icon{color:var(--em-blue);background:#eaf2ff;border-radius:50%;width:27px;height:27px;flex-shrink:0;display:grid;place-items:center}.em-toast strong{color:#304769;font-size:12px;font-weight:650}.em-toast p{color:#7b889c;font-size:11px;line-height:1.6;margin-top:2px}.em-toast>button{margin-left:6px;padding:2px;background:transparent;border:0;color:#98a4b8}.em-toast-error{border-color:#a8b3c3}.em-toast-error .em-toast-icon{background:#edf0f4;color:#35445c}.em-dialog{width:464px;max-width:calc(100vw - 32px);margin:auto;border:1px solid #e2e8f1;padding:26px;border-radius:15px;color:var(--em-ink);box-shadow:0 25px 90px #192b492b;overflow:auto;max-height:calc(100vh - 36px);background:#fff}.em-dialog::backdrop{background:#1d2b4452;backdrop-filter:blur(3px)}.em-dialog-top{display:flex;align-items:center;justify-content:space-between}.em-dialog-icon{width:44px;height:44px;border-radius:11px;background:#edf4ff;color:var(--em-blue);display:grid;place-items:center}.em-icon-button{border:0;color:#93a0b5;background:transparent;display:grid;place-items:center;padding:5px;border-radius:4px}.em-icon-button:hover{background:#f1f4f9}.em-dialog h2{font-size:22px;font-weight:650;letter-spacing:-.6px;margin-top:18px}.em-dialog>p{color:#7f8b9f;font-size:12px;line-height:1.75;margin-top:7px}.em-booking-detail{border:1px solid #e8edf5;background:#f8fafc;border-radius:8px;padding:13px 15px;margin-top:20px}.em-booking-detail>div{display:flex;justify-content:space-between;gap:14px;padding:4px 0;font-size:11px}.em-booking-detail span{color:#8b97aa}.em-booking-detail strong{color:#54667f;font-weight:550;text-align:right}.em-booking-detail small{color:#517cd0;font-size:10px}.em-slot-field{border:0;padding:0;margin:23px 0 0}.em-slot-field legend{font-size:12px;font-weight:550;width:100%;color:#586a83;padding:0;display:flex;justify-content:space-between;margin-bottom:11px}.em-slot-field legend span{font-size:10px;color:#98a4b7;font-weight:400}.em-slot-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.em-slot{position:relative;display:block;padding:12px 12px 11px 34px;border:1px solid #dfe6f1;border-radius:7px;color:#687b97;cursor:pointer;font-size:11px}.em-slot input{position:absolute;left:12px;top:14px;margin:0;accent-color:var(--em-blue);width:13px;height:13px}.em-slot small{display:block;color:#9da8b9;font-size:9px;margin-top:3px}.em-slot>svg{position:absolute;right:10px;bottom:10px}.em-slot:hover{border-color:#9dbcfa}.em-slot.em-slot-selected{color:#3468cd;border-color:#96b6fa;background:#f2f7ff}.em-slot.em-slot-disabled{background:#f5f7fa;color:#a2acbb;cursor:not-allowed;border-color:#e5eaf1}.em-dialog-footer{display:flex;justify-content:flex-end;gap:9px;padding-top:22px;margin-top:22px;border-top:1px solid #e9edf4}.em-dialog-footer .em-btn{height:37px;padding:0 15px;font-size:11px}.em-btn-cancel{border-color:#e1e7f0;color:#7c8ba1;background:#fff}.em-btn-cancel:hover{background:#f7f9fc}.em-btn-primary:disabled{opacity:.4}
+
+.em thead th:first-child { width:26%; }
+.em thead th:nth-child(2) { width:20%; }
+.em thead th:nth-child(3) { width:21%; }
+.em-dialog strong { overflow-wrap:anywhere; min-width:0; }
+.em-dialog { max-width:calc(100% - 32px); }
+.em-dialog .notice { margin-top:18px; margin-bottom:0; }
+.em-dialog button:disabled,.em-btn:disabled { opacity:.5; cursor:not-allowed; }
+.em-notice-region { overflow-wrap:anywhere; }
+.em-toast p { max-width:340px; }
+@media(max-width:1200px) {
+ .em-actions>div { flex-wrap:wrap; white-space:normal; }
+}
+@media(max-width:1020px) {
+ .em table { min-width:760px; }
+}
+@media(max-width:720px) {
+ .em-notice-region { left:16px; right:16px; bottom:18px; max-width:none; }
+ .em-dialog { padding:22px; }
+ .em-btn { min-height:40px; }
+ .em-toast p { max-width:100%; }
+}

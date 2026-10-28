@@ -25,6 +25,8 @@ async function main(args = process.argv.slice(2)) {
     // Owned IPC launchers/tests can request a graceful Windows shutdown without
     // adding an HTTP control endpoint or terminating unrelated node processes.
     if (process.send) {
+      // A crashed/terminated owning launcher also closes the database/listener.
+      process.once("disconnect", stop);
       process.send({ ready: true, port: running.server.address().port });
       process.once("message", async (message) => {
         if (message === "shutdown") { await running.close(); process.disconnect(); }

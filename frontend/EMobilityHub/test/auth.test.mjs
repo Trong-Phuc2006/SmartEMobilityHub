@@ -16,6 +16,21 @@ function deferred() {
   return { promise, resolve, reject }
 }
 
+test('parallel terminal errors preserve an expiry notice; cancelled protected responses cannot invalidate a newer session', async () => {
+  const session = createAuthSession({})
+  session.invalidate(failure('SESSION_EXPIRED', 401))
+  session.invalidate(failure('AUTH_REQUIRED', 401))
+  assert.equal(session.getSnapshot().notice, 'SESSION_EXPIRED')
+  let notified = 0
+  const controller = new AbortController()
+  const client = createHttpClient({ baseUrl: '', onAuthFailure: () => notified++, fetchImpl: async () => {
+    controller.abort()
+    return json({ ok: false, error: { code: 'SESSION_INVALID', fieldErrors: {} } }, 401)
+  } })
+  await assert.rejects(client.request('/hubs', { signal: controller.signal }), { name: 'AbortError' })
+  assert.equal(notified, 0)
+})
+
 test('Auth API sends exact JSON fields/credentials, no Origin/Authorization and no GET body', async () => {
   const calls = []
   const http = createHttpClient({ baseUrl: 'http://localhost:3000', fetchImpl: async (url, options) => {

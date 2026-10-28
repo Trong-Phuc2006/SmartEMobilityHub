@@ -102,3 +102,31 @@ test('Parking cancellation propagates AbortError through the existing client', a
   const api = createParkingApi(createHttpClient({ baseUrl: '', fetchImpl: async () => { throw new DOMException('Aborted', 'AbortError') } }))
   await assert.rejects(api.hubs({ signal: controller.signal }), { name: 'AbortError' })
 })
+
+test('Parking writes use exact POST body/encoded routes, validated authoritative snapshot and own list', async () => {
+  const calls = []
+  const reservation = { space_id: 'B-Mine', hub_id: hub.hub_id, hub_name: hub.name, state: 'RESERVED' }
+  const api = createParkingApi(createHttpClient({ baseUrl: '', fetchImpl: async (url, options) => {
+    calls.push({ url, options })
+    return url === '/parking-reservations' ? json({ reservations: [reservation] }) : json({ parking: payload, reservations: [reservation] }, url.endsWith('/reserve') ? 201 : 200)
+  } }))
+  assert.deepEqual(await api.reservations(), [reservation])
+  for (const action of ['reserve', 'arrive', 'release']) {
+    assert.deepEqual(await api.mutate(hub.hub_id, 'space /?', action), { parking: payload, reservations: [reservation] })
+    const { url, options } = calls.at(-1)
+    assert.equal(url, '/hubs/' + encodeURIComponent(hub.hub_id) + '/parking-spaces/space%20%2F%3F/' + action)
+    assert.equal(options.method, 'POST'); assert.equal(options.body, '{}'); assert.equal(options.credentials, 'include')
+  }
+  await assert.rejects(api.mutate(hub.hub_id, 'space', 'invalid'), TypeError)
+})
+
+test('Parking mutation failure preserves real error; malformed snapshot/own identity never claims success', async () => {
+  for (const [status, code] of [[409, 'SPACE_UNAVAILABLE'], [409, 'ACTIVE_RESERVATION_EXISTS'], [403, 'PARKING_NOT_OWNED'], [409, 'INVALID_PARKING_TRANSITION'], [503, 'SERVICE_UNAVAILABLE']]) {
+    const api = createParkingApi(createHttpClient({ baseUrl: '', fetchImpl: async () => new Response(JSON.stringify({ ok: false, error: { code, fieldErrors: {} } }), { status, headers: { 'Content-Type': 'application/json' } }) }))
+    await assert.rejects(api.mutate(hub.hub_id, 'space', 'reserve'), { status, code })
+  }
+  for (const data of [{ parking: payload, reservations: null }, { parking: { ...payload, summary: {} }, reservations: [] }, { parking: payload, reservations: [{ space_id: 'x', hub_id: 'h', hub_name: 'H', state: 'AVAILABLE' }] }]) {
+    const api = createParkingApi(createHttpClient({ baseUrl: '', fetchImpl: async () => json(data, 201) }))
+    await assert.rejects(api.mutate(hub.hub_id, 'space', 'reserve'), { code: 'UNEXPECTED_RESPONSE' })
+  }
+})

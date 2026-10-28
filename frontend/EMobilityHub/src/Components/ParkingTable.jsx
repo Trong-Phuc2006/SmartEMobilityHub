@@ -1,7 +1,7 @@
 import HubIcon from './HubIcon.jsx'
 import { filterSpaces, ownershipLabel, parkingStatus } from '../Services/parking.js'
 
-export default function ParkingTable({ spaces, filter, search, onFilter, onSearch, onReset }) {
+export default function ParkingTable({ spaces, filter, search, onFilter, onSearch, onReset, onAction, pending, hasReservation }) {
   const rows = filterSpaces(spaces, filter, search)
   return <div className="em-table-card">
     <div className="em-table-toolbar">
@@ -24,7 +24,17 @@ export default function ParkingTable({ spaces, filter, search, onFilter, onSearc
             <strong title={space.space_id}>{space.space_id}</strong></div></th>
           <td><span className={'em-badge ' + parkingStatus[space.state].className}><i />{parkingStatus[space.state].label}</span></td>
           <td><span className={'em-owner' + (space.is_mine ? ' em-owner-mine' : '')}>{space.is_mine && <HubIcon name="check" size={14} />}{ownershipLabel(space)}</span></td>
-          <td className="em-actions"><div><span className="em-disabled-action"><HubIcon name="lock" size={13} />Chưa triển khai</span></div></td>
+          <td className="em-actions"><div>
+            {space.state === 'AVAILABLE' ? <button type="button" className="em-btn em-btn-outline" data-action="reserve"
+              disabled={pending || hasReservation} title={hasReservation ? 'Hãy trả chỗ hiện tại trước khi đặt mới' : undefined}
+              onClick={(event) => onAction(space, 'reserve', event.currentTarget)}>Đặt chỗ</button>
+              : space.is_mine ? <>
+                {space.state === 'RESERVED' && <button type="button" className="em-btn em-btn-primary" data-action="arrive" disabled={pending}
+                  onClick={(event) => onAction(space, 'arrive', event.currentTarget)}>Đã đến bãi</button>}
+                <button type="button" className="em-btn em-btn-quiet" data-action="release" disabled={pending}
+                  onClick={(event) => onAction(space, 'release', event.currentTarget)}>{space.state === 'RESERVED' ? 'Hủy đặt chỗ' : 'Trả chỗ'}</button>
+              </> : <span className="em-unavailable"><HubIcon name="lock" size={13} />Không khả dụng</span>}
+          </div></td>
         </tr>)}
           {!rows.length && <tr><td colSpan={4}><div className="em-empty">
             <HubIcon name="search" size={30} /><strong>{spaces.length ? 'Không tìm thấy chỗ đỗ phù hợp' : 'Hub này chưa có chỗ đỗ xe'}</strong>
@@ -34,6 +44,6 @@ export default function ParkingTable({ spaces, filter, search, onFilter, onSearc
         </tbody>
       </table>
     </div>
-    <div className="em-table-footer" role="status"><span>Hiển thị {rows.length} / {spaces.length} chỗ đỗ</span><span><HubIcon name="lock" size={13} />Chỉ xem thông tin</span></div>
+    <div className="em-table-footer" role="status"><span>Hiển thị {rows.length} / {spaces.length} chỗ đỗ</span><span><HubIcon name="lock" size={13} />Chỉ quản lý chỗ đỗ của bạn</span></div>
   </div>
 }

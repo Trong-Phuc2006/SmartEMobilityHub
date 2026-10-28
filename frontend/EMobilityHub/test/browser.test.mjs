@@ -37,8 +37,9 @@ test('P4 real Chrome/Express Auth integration, visual/accessibility and failure 
     await vite.listen()
     t.after(() => vite.close())
     const cdp = await startBrowser(t)
-    fs.mkdirSync(path.join(root, '.tmp'), { recursive: true })
-    const artifacts = fs.mkdtempSync(path.join(root, '.tmp/p4-browser-'))
+    const outputRoot = process.env.SEMH_EVIDENCE_ROOT || path.join(root, '.tmp')
+    fs.mkdirSync(outputRoot, { recursive: true })
+    const artifacts = fs.mkdtempSync(path.join(outputRoot, 'p4-browser-'))
     const evidence = { tests: [], viewports: [], screenshots: [] }
     const requests = []
     const faults = new Map()
@@ -138,10 +139,10 @@ test('P4 real Chrome/Express Auth integration, visual/accessibility and failure 
 
     await t.test('Desktop/mobile styles, password visibility, keyboard focus and screenshots', async () => {
       const desktop = await viewport(1440, 900)
-      assert.equal(desktop.card, 464)
-      assert.equal(desktop.padding, '26px')
-      assert.equal(desktop.heading, '24px')
-      assert.equal(desktop.input, 40)
+      assert.equal(desktop.card, 400)
+      assert.equal(desktop.padding, '0px')
+      assert.equal(desktop.heading, '28px')
+      assert.equal(desktop.input, 48)
       assert.equal(desktop.primary, '#2563eb')
       await screenshot('login-desktop')
       await fill(cdp, 'password', 'p4-fixture-password')
@@ -157,7 +158,7 @@ test('P4 real Chrome/Express Auth integration, visual/accessibility and failure 
       assert.equal(await evaluate(cdp, "Array.from(document.querySelectorAll('input')).every(i=>!!document.querySelector('label[for='+i.id+']'))"), true)
       for (const width of [390, 320]) {
         const metrics = await viewport(width, 844)
-        assert.equal(metrics.card, width - 32)
+        assert.equal(metrics.card, width - 48)
       }
       await screenshot('login-mobile')
       await setHash('#/register')
