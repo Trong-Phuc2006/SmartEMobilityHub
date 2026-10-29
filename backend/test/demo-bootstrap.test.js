@@ -26,8 +26,13 @@ test("one-time fixture bootstrap hashes demo credentials, reuses unchanged DB/ke
   try {
     assert.equal(db.pragma("foreign_key_check").length, 0);
     assert.equal(db.prepare("SELECT COUNT(*) n FROM ParkingSpaces").get().n, 12);
+    assert.equal(db.prepare("SELECT COUNT(*) n FROM Vehicles").get().n, 8);
+    assert.equal(db.prepare("SELECT hub_id FROM Vehicles WHERE state='IN_USE'").get().hub_id, null);
+    assert.deepEqual(db.prepare("SELECT DISTINCT battery_level FROM Vehicles WHERE battery_level IN (0,19,20,100) ORDER BY battery_level").all().map(r => r.battery_level), [0,19,20,100]);
+    assert.equal(db.prepare("SELECT COUNT(*) n FROM Vehicles WHERE hub_id='new-campus'").get().n, 0);
+    assert.equal(db.prepare("SELECT COUNT(*) n FROM Reservations WHERE type='VEHICLE'").get().n, 2);
     for (const row of db.prepare("SELECT password_hash FROM Users").all()) assert.equal(await verifyPassword(fixture.password, row.password_hash), true);
-    assert.equal(db.prepare("SELECT COUNT(*) n FROM (SELECT user_id FROM Reservations WHERE state IN ('RESERVED','ACTIVE') GROUP BY user_id HAVING COUNT(*)>1)").get().n, 0);
+    assert.equal(db.prepare("SELECT COUNT(*) n FROM (SELECT user_id,type FROM Reservations WHERE state IN ('RESERVED','ACTIVE') GROUP BY user_id,type HAVING COUNT(*)>1)").get().n, 0);
     db.exec("UPDATE ParkingSpaces SET state='AVAILABLE' WHERE space_id='CAMPUS-02'; UPDATE Reservations SET state='CANCELLED' WHERE space_id='CAMPUS-02';");
   } finally { db.close(); }
   const saved = { db: hash(p.database), key: hash(p.env), status: localDemoStatus(p.name) };
@@ -36,6 +41,7 @@ test("one-time fixture bootstrap hashes demo credentials, reuses unchanged DB/ke
   const old = localDemoFixture(t);
   await ensureLocalDemo(old.name);
   assert.equal(localDemoStatus(old.name).users, 0);
+  assert.equal(localDemoStatus(old.name).vehicles, 0);
   assert.deepEqual(protectedSnapshot(), before);
 });
 

@@ -4,6 +4,7 @@ const cookie = require("cookie");
 const { createTokenService } = require("./services/token.service");
 const { createAuthRouter } = require("./routes/auth.routes");
 const { createParkingRouter, createOwnParkingRouter } = require("./routes/parking.routes");
+const { createVehicleRouter, createOwnVehicleRouter } = require("./routes/vehicle.routes");
 const { ApiError, errorHandler } = require("./http/errors");
 
 function createApp({ config, db } = {}) {
@@ -21,6 +22,8 @@ function createApp({ config, db } = {}) {
   app.use("/auth", createAuthRouter({ config, db, tokens }));
   app.use("/hubs", createParkingRouter({ config, db, tokens }));
   app.use("/parking-reservations", createOwnParkingRouter({ config, db, tokens }));
+  app.use("/vehicles", createVehicleRouter({ config, db, tokens }));
+  app.use("/vehicle-reservations", createOwnVehicleRouter({ config, db, tokens }));
   app.get("/", (req, res) => {
     res.json({ ok: true, data: { message: "Smart E-Mobility Hub API is running" } });
   });

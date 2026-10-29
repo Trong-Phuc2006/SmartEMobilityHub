@@ -1,7 +1,8 @@
-import { useEffect, useState, useSyncExternalStore } from 'react'
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import Login from './Pages/Login.jsx'
 import Register from './Pages/Register.jsx'
 import ParkingDashboard from './Pages/ParkingDashboard.jsx'
+import VehicleDashboard from './Pages/VehicleDashboard.jsx'
 import SessionGate from './Components/SessionGate.jsx'
 import { createAuthRuntime, normalizeEmail } from './Services/auth.js'
 import { sessionMessage } from './Services/auth-validation.js'
@@ -15,11 +16,22 @@ function App() {
   const state = useSyncExternalStore(session.subscribe, session.getSnapshot)
   const hash = useSyncExternalStore(subscribeHash, getHash)
   const route = resolveRoute(hash, state.status)
+  const [hubSelection, setHubSelection] = useState(null)
+  const [vehicleView, setVehicleView] = useState(null)
+  const userId = state.user?.user_id
+  const selectHub = useCallback(hubId => setHubSelection({ userId, hubId }), [userId])
+  const selectVehicleScope = useCallback(scope => setVehicleView({ userId, scope }), [userId])
+  const actionBusy = useRef(false)
+  const [operationRoute, setOperationRoute] = useState(null)
+  const reportBusy = useCallback(value => {
+    actionBusy.current = value
+    setOperationRoute(value ? window.location.hash : null)
+  }, [])
   useEffect(() => {
     void session.restore()
     const recheck = () => {
       const current = session.getSnapshot()
-      if (current.status === 'authenticated' && !current.logoutPending) void session.restore()
+      if (current.status === 'authenticated' && !current.logoutPending && !actionBusy.current) void session.restore()
     }
     const visible = () => { if (document.visibilityState === 'visible') recheck() }
     // Chromium can emit window focus when a native dialog closes without ever
@@ -41,10 +53,13 @@ function App() {
     }
   }, [session])
   useEffect(() => {
-    if (!['restoring', 'error'].includes(state.status) && hash !== route) navigate(route, true)
-  }, [hash, route, state.status])
+    const target = state.status === 'authenticated' && operationRoute ? operationRoute : route
+    if (!['restoring', 'error'].includes(state.status) && hash !== target) navigate(target, true)
+  }, [hash, route, state.status, operationRoute])
   function loggedOut() {
     setRegistration(null)
+    setHubSelection(null)
+    setVehicleView(null)
     navigate('#/login', true)
   }
   async function logout() {
@@ -54,7 +69,11 @@ function App() {
     return <SessionGate state={state} session={session} onLoggedOut={loggedOut} />
   }
   if (state.status === 'authenticated') {
-    return <ParkingDashboard http={runtime.http} user={state.user} route={route} pending={state.logoutPending} onLogout={logout} />
+    const displayedRoute = operationRoute || route
+    const Dashboard = displayedRoute === '#/vehicle' || displayedRoute === '#/overview/vehicle' ? VehicleDashboard : ParkingDashboard
+    return <Dashboard http={runtime.http} user={state.user} route={displayedRoute} pending={state.logoutPending} onLogout={logout}
+      initialHub={hubSelection?.userId === userId ? hubSelection.hubId : ''} onSelectedHub={selectHub} onBusy={reportBusy}
+      initialScope={vehicleView?.userId === userId ? vehicleView.scope : 'hub'} onVehicleScope={selectVehicleScope} />
   }
   if (route === '#/register') {
     return <Register onSubmit={api.register} onSuccess={(email) => {
@@ -66,6 +85,8 @@ function App() {
     ? 'Tạo tài khoản thành công. Vui lòng đăng nhập.' : '')}
     onSubmit={session.login} onSuccess={() => {
       setRegistration(null)
+      setHubSelection(null)
+      setVehicleView(null)
       navigate('#/parking', true)
     }} />
 }

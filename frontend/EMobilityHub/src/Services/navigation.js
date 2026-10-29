@@ -1,6 +1,6 @@
 export function resolveRoute(hash, status) {
   const publicRoute = hash === '#/login' || hash === '#/register'
-  const protectedRoute = hash === '#/parking' || hash === '#/overview'
+  const protectedRoute = ['#/parking', '#/overview', '#/vehicle', '#/overview/vehicle'].includes(hash)
   if (status === 'authenticated') return protectedRoute ? hash : '#/parking'
   return publicRoute ? hash : '#/login'
 }

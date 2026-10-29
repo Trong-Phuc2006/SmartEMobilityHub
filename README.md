@@ -1,4 +1,27 @@
-# SmartEMobilityHub — môi trường local, Auth và Parking
+# SmartEMobilityHub — môi trường local, Auth, Parking và Vehicle
+
+## VEH-P1 — demo Student Vehicle Rental
+
+Giữ launcher hiện có. Từ PowerShell tại thư mục SmartEMobilityHub, chọn **instance mới** có dữ liệu Vehicle:
+
+```powershell
+$env:DEMO_NAME = 'veh-p1-demo'
+npm run dev:demo
+```
+
+Mở http://localhost:5173, đăng nhập bằng tài khoản DEMO-ONLY ở phần CR-01 bên dưới hoặc Register tài khoản thử mới, chọn **Thuê phương tiện**. Tên đã tồn tại luôn được reuse nguyên trạng; nếu tên này đã được dùng từ phiên bản chưa có Vehicle, chọn slug mới, ví dụ veh-p1-demo-02. Không xóa/reseed instance cũ. Không cần cài thêm dependency cho VEH-P1.
+
+Fixture version2 chỉ áp dụng khi bootstrap instance mới:3 users/3 Hubs/12 ParkingSpaces/8 Vehicles/5 Reservations. Có pin0/19/20/100, xe RESERVED của rider, IN_USE của guest với Hub NULL, UNAVAILABLE và Hub new-campus không xe. Student ban đầu có Parking reservation nhưng chưa thuê xe; giới hạn một Vehicle độc lập với Parking. Bộ chọn **Hub hiện tại / Toàn mạng lưới**, search ID/type, Tất cả/Khả dụng/Của tôi và own-rental banner dùng dữ liệu SQLite thật.
+
+Đặt xe cần AVAILABLE và pin≥20. Nhận xe làm Hub=NULL; banner vẫn cho trả xe kể cả khi bảng theo Hub không còn xe đó. Trả xe yêu cầu chọn Hub đích và nhập pin nguyên0..100, cho phép khác Hub nhận. Hủy chỉ trước pickup. History giữ trong Reservations. AVAILABLE pin thấp vẫn AVAILABLE nhưng không đặt được; summary đếm state, không đếm điều kiện pin.
+
+Visible Vehicle view đọc lại khoảng15giây, khi focus/đổi Hub/scope hoặc Tải lại. Poll dừng khi hidden/dialog pending, không tự retry POST. Mất response có thể sau commit: dùng **Tải lại trạng thái** để GET reconcile. POST đã xác nhận vẫn được ghi nhận nếu GET refresh sau đó lỗi.
+
+Ctrl+C dừng cả FE/BE. Chạy lại cùng DEMO_NAME giữ accounts/Parking/Vehicle/history/battery và signing key, không seed lại. Cookie còn hạn dùng được với cùng key; hết hạn thì Login lại. Xem counts/path bằng `npm run demo:status` với cùng DEMO_NAME. DB/key/owner marker ở backend/.tmp/local-demos/veh-p1-demo, ignored. Giữ nguyên acceptance-p7, class-demo, cr01-demo, DB demo cũ và artifacts CR-01.
+
+Sáu Vehicle APIs và DTO/errors được mô tả duy nhất tại contract harness. Backend npm test tự nhận vehicle.test.js; frontend npm test và test:browser có Vehicle suites. Test/browser chỉ dùng factory-owned temp/file SQLite/profile; kết quả runtime/evidence tại handoff VEH-P1 trong harness. Automatic expiration chưa có TTL nên **DEFERRED**, không worker. Operator/redistribution/fault/repair/Charging/What-if ngoài scope; P6 và CR-01 cleanup không thay đổi.
+
+Các giới hạn Vehicle unavailable trong phần lịch sử dưới đây đã được VEH-P1 thay thế; các quy tắc bảo vệ instance cũ tiếp tục áp dụng.
 
 Giữ React/Vite JSX → Express CommonJS → SQLite. CR-01 bổ sung Auth split screen, Parking đặt/đến/trả/hủy thật và một lệnh demo dùng dữ liệu bền vững. HTTP duy nhất ở [contract của harness](<../Codex Workspace/contracts/http-api.md>); P6 assignment riêng vẫn conditional/unresolved.
 

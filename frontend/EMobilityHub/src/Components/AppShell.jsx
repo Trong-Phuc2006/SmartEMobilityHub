@@ -6,18 +6,19 @@ import { navigate } from '../Services/navigation.js'
 export default function AppShell({ user, route, pending, onLogout, hubs, selectedHub, hubsLoading, onHubChange, children }) {
   const items = [
     ['overview', 'Tổng quan', '#/overview'], ['parking', 'Bãi đỗ xe', '#/parking'],
-    ['vehicle', 'Phương tiện'], ['charging', 'Trạm sạc'],
+    ['vehicle', 'Thuê phương tiện', '#/vehicle'], ['charging', 'Trạm sạc'],
   ]
+  const activeRoute = route.startsWith('#/overview') ? '#/overview' : route
   return <div className="em" data-protected-view>
     <aside className="em-sidebar">
       <Brand dashboard />
       <div className="em-nav-label">ĐIỀU HƯỚNG</div>
       <nav aria-label="Điều hướng Mobility Hub">
         {items.map(([icon, label, hash]) => <button type="button" key={icon} disabled={!hash || pending}
-          className={'em-nav-item' + (route === hash ? ' em-nav-active' : '')}
-          aria-current={route === hash ? 'page' : undefined} onClick={() => navigate(hash)}>
+          className={'em-nav-item' + (activeRoute === hash ? ' em-nav-active' : '')}
+          aria-current={activeRoute === hash ? 'page' : undefined} onClick={() => navigate(hash)}>
           <HubIcon name={icon} /><span>{label}{!hash && <small>Chưa triển khai</small>}</span>
-          {route === hash && <span className="em-nav-dot" />}
+          {activeRoute === hash && <span className="em-nav-dot" />}
         </button>)}
       </nav>
       <div className="em-sidebar-bottom"><div className="em-demo-label">Đồ án Công nghệ phần mềm<span>DỮ LIỆU DEMO · SQLITE</span></div></div>

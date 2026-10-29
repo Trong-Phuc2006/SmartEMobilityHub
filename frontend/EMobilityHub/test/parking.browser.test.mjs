@@ -141,7 +141,7 @@ test('P5 actual SQLite Parking browser flows and HTML comparison',
       assert.equal(states.filter((s) => s === 'Đã đặt').length, 3)
       assert.equal(states.filter((s) => s === 'Đang sử dụng').length, 3)
       assert.equal(await evaluate(cdp, "document.querySelectorAll('.em-actions button').length"), 4)
-      assert.equal(await evaluate(cdp, "document.querySelectorAll('.em-nav-item:disabled').length"), 2)
+      assert.equal(await evaluate(cdp, "document.querySelectorAll('.em-nav-item:disabled').length"), 1)
       assert.equal(getChanges(), changes)
     })
     await t.test('All/Available/Mine/search/reset/banner preserve whole-Hub counts', async () => {
@@ -220,8 +220,8 @@ test('P5 actual SQLite Parking browser flows and HTML comparison',
       await click(cdp, '.em-nav-item:first-child')
       await waitFor(cdp, textIncludes('Tổng quan Mobility Hub'), 'Overview')
       await waitRows(); await screen('react-overview-1440')
-      assert.equal(await evaluate(cdp, "document.querySelector('[aria-label=" + JSON.stringify('Chọn phân hệ trong bảng') + "]').disabled"), true)
-      assert.equal(await evaluate(cdp, "document.querySelectorAll('[aria-label=" + JSON.stringify('Chọn phân hệ trong bảng') + "] option[disabled]').length"), 2)
+      assert.equal(await evaluate(cdp, "document.querySelector('[aria-label=" + JSON.stringify('Chọn phân hệ trong bảng') + "]').disabled"), false)
+      assert.equal(await evaluate(cdp, "document.querySelectorAll('[aria-label=" + JSON.stringify('Chọn phân hệ trong bảng') + "] option[disabled]').length"), 1)
       await click(cdp, '.em-nav-item:nth-child(2)'); await waitRows()
     })
     await t.test('refresh restores session, protected GET expiry invalidates, Logout clears Parking and Back is guarded', async () => {

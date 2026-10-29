@@ -128,6 +128,13 @@ async function ensureLocalDemo(name) {
       space.run(row.space_id, row.hub_id, row.state);
       if (row.owner) reservation.run("initial-" + row.space_id, row.owner, row.space_id, now, row.state === "RESERVED" ? "RESERVED" : "ACTIVE", now);
     }
+    const vehicle = db.prepare("INSERT INTO Vehicles(vehicle_id,hub_id,type,battery_level,state) VALUES (?,?,?,?,?)");
+    const rental = db.prepare(`INSERT INTO Reservations(reservation_id,user_id,type,vehicle_id,space_id,start_time,end_time,state,created_at)
+      VALUES (?,?,'VEHICLE',?,NULL,?,NULL,?,?)`);
+    for (const row of fixture.vehicles || []) {
+      vehicle.run(row.vehicle_id, row.hub_id, row.type, row.battery_level, row.state);
+      if (row.owner) rental.run("initial-" + row.vehicle_id, row.owner, row.vehicle_id, now, row.state === "RESERVED" ? "RESERVED" : "ACTIVE", now);
+    }
   } });
   return { ...paths, initialized: true };
 }
@@ -158,7 +165,7 @@ function localDemoStatus(name) {
   try {
     const count = (table) => db.prepare(`SELECT COUNT(*) n FROM ${table}`).get().n;
     return { database: paths.database, foreign_keys: db.pragma("foreign_keys", { simple: true }),
-      users: count("Users"), hubs: count("Hubs"), spaces: count("ParkingSpaces"), reservations: count("Reservations") };
+      users: count("Users"), hubs: count("Hubs"), spaces: count("ParkingSpaces"), reservations: count("Reservations"), vehicles: count("Vehicles") };
   } finally { db.close(); }
 }
 

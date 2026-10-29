@@ -1,14 +1,19 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import AppShell from '../Components/AppShell.jsx'
 import ParkingSummary from '../Components/ParkingSummary.jsx'
 import ParkingTable from '../Components/ParkingTable.jsx'
 import HubIcon from '../Components/HubIcon.jsx'
 import ParkingDialog from '../Components/ParkingDialog.jsx'
 import { createParkingApi, parkingErrorMessage } from '../Services/parking.js'
+import { createVehicleApi } from '../Services/vehicle.js'
+import { navigate } from '../Services/navigation.js'
 import './ParkingDashboard.css'
 
-export default function ParkingDashboard({ http, user, route, pending, onLogout }) {
+export default function ParkingDashboard({ http, user, route, pending, onLogout, initialHub = '', onSelectedHub }) {
   const [api] = useState(() => createParkingApi(http))
+  const [vehicleApi] = useState(() => createVehicleApi(http))
+  const startHub = useRef(initialHub)
+  const [vehicleData, setVehicleData] = useState(null)
   const [hubs, setHubs] = useState({ status: 'loading', rows: [], error: null })
   const [selectedHub, setSelectedHub] = useState('')
   const [parking, setParking] = useState({ status: 'loading', data: null, error: null })
@@ -31,12 +36,21 @@ export default function ParkingDashboard({ http, user, route, pending, onLogout 
     api.hubs({ signal: controller.signal }).then((rows) => {
       if (!current) return
       setHubs({ status: 'ready', rows, error: null })
-      setSelectedHub(rows[0]?.hub_id || '')
+      const id = rows.some(row => row.hub_id === startHub.current) ? startHub.current : rows[0]?.hub_id || ''
+      setSelectedHub(id); onSelectedHub?.(id)
     }).catch((error) => {
       if (current && !controller.signal.aborted) setHubs({ status: 'error', rows: [], error })
     })
     return () => { current = false; controller.abort() }
-  }, [api, hubsAttempt])
+  }, [api, hubsAttempt, onSelectedHub])
+  useEffect(() => {
+    if (!selectedHub) return
+    const controller = new AbortController(); let current = true
+    vehicleApi.list(selectedHub, { signal: controller.signal }).then(data => {
+      if (current) setVehicleData({ hubId: selectedHub, summary: data.summary })
+    }).catch(() => { if (current) setVehicleData(null) })
+    return () => { current = false; controller.abort() }
+  }, [vehicleApi, selectedHub])
   useEffect(() => {
     if (!selectedHub) return
     const controller = new AbortController()
@@ -59,6 +73,7 @@ export default function ParkingDashboard({ http, user, route, pending, onLogout 
     setParking({ status: 'loading', data: null, error: null })
     reset()
     setSelectedHub(id)
+    onSelectedHub?.(id)
   }
   function retryHubs() {
     setHubs({ status: 'loading', rows: [], error: null })
@@ -98,12 +113,12 @@ export default function ParkingDashboard({ http, user, route, pending, onLogout 
         <p>{hub ? [hub.name, hub.location_type].filter(Boolean).join(' · ') : 'Thông tin dịch vụ tại Mobility Hub'}</p></div>
         <div className="em-date">{today}<span><i />Dữ liệu demo · SQLite</span></div>
       </div>
-      <ParkingSummary summary={data?.summary} overview={overview} pending={pending} />
+      <ParkingSummary summary={data?.summary} vehicleSummary={vehicleData?.hubId === selectedHub ? vehicleData.summary : null} overview={overview} pending={pending} />
       <section className="em-resource-section" aria-labelledby="em-resource-title">
         <div className="em-section-heading"><div><div className="em-eyebrow">DỊCH VỤ TẠI {hub?.name || 'MOBILITY HUB'}</div>
           <div className="em-table-title"><h2 id="em-resource-title">{overview ? 'Danh sách tài nguyên' : 'Bãi đỗ xe'}<span>{data ? data.summary.total_spaces : '—'}</span></h2>
-            {overview && <label className="em-module-select"><select aria-label="Chọn phân hệ trong bảng" value="parking" disabled title="Chỉ Bãi đỗ xe khả dụng; Phương tiện và Trạm sạc chưa triển khai.">
-              <option value="parking">Bãi đỗ xe</option><option disabled>Phương tiện · Chưa triển khai</option><option disabled>Trạm sạc · Chưa triển khai</option>
+            {overview && <label className="em-module-select"><select aria-label="Chọn phân hệ trong bảng" value="parking" disabled={pending || actionPending} onChange={() => navigate('#/overview/vehicle')}>
+              <option value="parking">Bãi đỗ xe</option><option value="vehicle">Thuê phương tiện</option><option disabled>Trạm sạc · Chưa triển khai</option>
             </select><HubIcon name="down" size={14} /></label>}
           </div><p>Xem tình trạng và chỗ đỗ của bạn trong Hub hiện tại.</p></div></div>
         {reservations.length > 0 && <div className="em-reservation"><span className="em-reservation-icon"><HubIcon name="check" size={19} /></span>

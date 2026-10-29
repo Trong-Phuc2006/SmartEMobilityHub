@@ -1,5 +1,7 @@
 # React + Vite
 
+VEH-P1 bổ sung Student Vehicle Rental (Hub/global, reserve/pickup/return/cancel, own recovery/polling) vào shell và HTTP/session hiện có. Hướng dẫn demo populated bằng DEMO_NAME và lệnh test duy nhất ở README root; Vehicle browser suite dùng CDP/file SQLite thật. Không TTL tự động hoặc Charging/Operator.
+
 SmartEMobilityHub: xem [hướng dẫn local tại repo root](../../README.md) để cài dependencies, tạo env, cấu hình API base/port, chạy backend/frontend và tests. P4 Auth/session/hash guards được giữ; P5 đã thay Parking/Overview bằng dashboard GET SQLite thật. Commands và test/demo-data limits ở README root. Phần template/compiler notes bên dưới là lịch sử công cụ, không phải thiết kế UI hiện hành.
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.

@@ -1,29 +1,164 @@
 {
-  "version": 1,
+  "version": 2,
   "credentialPolicy": "Public synthetic DEMO ONLY credentials. Never use for real users or deployment.",
   "password": "CampusDemo!2026",
   "users": [
-    {"user_id":"cr01-student","email":"student@demo.example"},
-    {"user_id":"cr01-rider","email":"rider@demo.example"},
-    {"user_id":"cr01-guest","email":"guest@demo.example"}
+    {
+      "user_id": "cr01-student",
+      "email": "student@demo.example"
+    },
+    {
+      "user_id": "cr01-rider",
+      "email": "rider@demo.example"
+    },
+    {
+      "user_id": "cr01-guest",
+      "email": "guest@demo.example"
+    }
   ],
   "hubs": [
-    {"hub_id":"campus","name":"Campus · Cổng đại học","location_type":"CAMPUS","total_parking_capacity":8},
-    {"hub_id":"metro","name":"Metro · Ga trung tâm","location_type":"METRO","total_parking_capacity":4},
-    {"hub_id":"new-campus","name":"New Campus · Đang chuẩn bị","location_type":"CAMPUS","total_parking_capacity":0}
+    {
+      "hub_id": "campus",
+      "name": "Campus · Cổng đại học",
+      "location_type": "CAMPUS",
+      "total_parking_capacity": 8
+    },
+    {
+      "hub_id": "metro",
+      "name": "Metro · Ga trung tâm",
+      "location_type": "METRO",
+      "total_parking_capacity": 4
+    },
+    {
+      "hub_id": "new-campus",
+      "name": "New Campus · Đang chuẩn bị",
+      "location_type": "CAMPUS",
+      "total_parking_capacity": 0
+    }
   ],
   "spaces": [
-    {"space_id":"CAMPUS-01","hub_id":"campus","state":"AVAILABLE"},
-    {"space_id":"CAMPUS-02","hub_id":"campus","state":"RESERVED","owner":"cr01-student"},
-    {"space_id":"CAMPUS-03","hub_id":"campus","state":"OCCUPIED","owner":"cr01-rider"},
-    {"space_id":"CAMPUS-04","hub_id":"campus","state":"AVAILABLE"},
-    {"space_id":"CAMPUS-05","hub_id":"campus","state":"AVAILABLE"},
-    {"space_id":"CAMPUS-06","hub_id":"campus","state":"AVAILABLE"},
-    {"space_id":"CAMPUS-07","hub_id":"campus","state":"AVAILABLE"},
-    {"space_id":"CAMPUS-08","hub_id":"campus","state":"AVAILABLE"},
-    {"space_id":"METRO-01","hub_id":"metro","state":"AVAILABLE"},
-    {"space_id":"METRO-02","hub_id":"metro","state":"RESERVED","owner":"cr01-guest"},
-    {"space_id":"METRO-03","hub_id":"metro","state":"AVAILABLE"},
-    {"space_id":"METRO-04","hub_id":"metro","state":"AVAILABLE"}
+    {
+      "space_id": "CAMPUS-01",
+      "hub_id": "campus",
+      "state": "AVAILABLE"
+    },
+    {
+      "space_id": "CAMPUS-02",
+      "hub_id": "campus",
+      "state": "RESERVED",
+      "owner": "cr01-student"
+    },
+    {
+      "space_id": "CAMPUS-03",
+      "hub_id": "campus",
+      "state": "OCCUPIED",
+      "owner": "cr01-rider"
+    },
+    {
+      "space_id": "CAMPUS-04",
+      "hub_id": "campus",
+      "state": "AVAILABLE"
+    },
+    {
+      "space_id": "CAMPUS-05",
+      "hub_id": "campus",
+      "state": "AVAILABLE"
+    },
+    {
+      "space_id": "CAMPUS-06",
+      "hub_id": "campus",
+      "state": "AVAILABLE"
+    },
+    {
+      "space_id": "CAMPUS-07",
+      "hub_id": "campus",
+      "state": "AVAILABLE"
+    },
+    {
+      "space_id": "CAMPUS-08",
+      "hub_id": "campus",
+      "state": "AVAILABLE"
+    },
+    {
+      "space_id": "METRO-01",
+      "hub_id": "metro",
+      "state": "AVAILABLE"
+    },
+    {
+      "space_id": "METRO-02",
+      "hub_id": "metro",
+      "state": "RESERVED",
+      "owner": "cr01-guest"
+    },
+    {
+      "space_id": "METRO-03",
+      "hub_id": "metro",
+      "state": "AVAILABLE"
+    },
+    {
+      "space_id": "METRO-04",
+      "hub_id": "metro",
+      "state": "AVAILABLE"
+    }
+  ],
+  "vehicles": [
+    {
+      "vehicle_id": "CAMPUS-V00",
+      "hub_id": "campus",
+      "type": "Xe đạp điện",
+      "battery_level": 0,
+      "state": "AVAILABLE"
+    },
+    {
+      "vehicle_id": "CAMPUS-V19",
+      "hub_id": "campus",
+      "type": "Xe đạp điện",
+      "battery_level": 19,
+      "state": "AVAILABLE"
+    },
+    {
+      "vehicle_id": "CAMPUS-V20",
+      "hub_id": "campus",
+      "type": "Xe máy điện",
+      "battery_level": 20,
+      "state": "AVAILABLE"
+    },
+    {
+      "vehicle_id": "CAMPUS-V88",
+      "hub_id": "campus",
+      "type": "Xe đạp điện",
+      "battery_level": 88,
+      "state": "AVAILABLE"
+    },
+    {
+      "vehicle_id": "CAMPUS-VR",
+      "hub_id": "campus",
+      "type": "Xe máy điện",
+      "battery_level": 64,
+      "state": "RESERVED",
+      "owner": "cr01-rider"
+    },
+    {
+      "vehicle_id": "INUSE-V",
+      "hub_id": null,
+      "type": "Xe đạp điện",
+      "battery_level": 45,
+      "state": "IN_USE",
+      "owner": "cr01-guest"
+    },
+    {
+      "vehicle_id": "METRO-V100",
+      "hub_id": "metro",
+      "type": "Xe máy điện",
+      "battery_level": 100,
+      "state": "AVAILABLE"
+    },
+    {
+      "vehicle_id": "METRO-VX",
+      "hub_id": "metro",
+      "type": "Xe máy điện",
+      "battery_level": 76,
+      "state": "UNAVAILABLE"
+    }
   ]
 }
